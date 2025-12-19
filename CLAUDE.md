@@ -208,3 +208,62 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+---
+
+## Phase I Technology Stack (Added 2025-12-18)
+
+### Runtime & Package Management
+- **Python**: 3.13+ (latest stable with JIT compiler)
+- **Package Manager**: UV (modern, fast Python package manager)
+- **Virtual Environment**: Managed automatically by UV (no manual activation)
+
+### Core Dependencies
+- **questionary** >=2.0.0 - Interactive CLI prompts (menus, text input, confirmations)
+- **rich** >=13.0.0 - Beautiful terminal output (tables, panels, colors, themes)
+- **pyfiglet** >=1.0.2 - ASCII art banners
+
+### Development Dependencies
+- **pytest** >=8.0.0 - Testing framework
+- **pytest-cov** >=4.0.0 - Coverage reporting
+- **ruff** >=0.8.0 - Fast linting and formatting
+
+### Standard Library Usage
+- `dataclasses` - Task model definition with field factories
+- `datetime` - Timestamp handling (created_at, updated_at, completed_at)
+- `uuid` - Unique task IDs (uuid4() generation)
+- `typing` - Type hints (union types with |, generics)
+- `enum` - Priority enumeration (HIGH, MEDIUM, LOW)
+
+### Key Patterns
+1. **Dependency Injection**: Storage instance passed to all command functions
+2. **Singleton Console**: Single rich.Console instance with custom theme
+3. **Dataclass with Factories**: Auto-generation of UUID and timestamps
+4. **Pattern Matching**: `match/case` for command routing in main loop
+5. **Union Types**: Modern Python 3.10+ syntax (`Task | None` instead of `Optional[Task]`)
+
+### Project Structure (Phase I)
+```
+phase-1/
+├── src/todo/          # Main application package
+├── tests/             # Pytest test suite
+├── pyproject.toml     # UV project configuration
+└── README.md          # Phase I documentation
+```
+
+### Common Commands
+```bash
+uv sync                # Install/update dependencies
+uv run todo            # Run application
+uv run pytest          # Run tests
+uv run ruff check .    # Lint code
+uv run ruff format .   # Format code
+```
+
+### Important Constraints
+- **No persistence**: In-memory storage only (data lost on exit)
+- **No database**: Python dict storage, no SQLite/PostgreSQL
+- **No web frameworks**: CLI application only
+- **No file I/O**: No JSON/CSV export (Phase I scope)
+
+---
