@@ -1,0 +1,45 @@
+[project]
+name = "todo-api"
+version = "1.0.0"
+description = "Phase II FastAPI backend for Evolution of Todo"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.31.0",
+    "sqlmodel>=0.0.22",
+    "alembic>=1.14.0",
+    "asyncpg>=0.29.0",
+    "python-jose[cryptography]>=3.3.0",
+    "pydantic-settings>=2.5.2",
+    "python-multipart>=0.0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=4.0.0",
+    "httpx>=0.27.0",
+    "ruff>=0.8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = "-v --strict-markers --cov=todo_api --cov-report=term-missing"
