@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "src/lib/api-client";
 import { useAuth } from "./use-auth";
 import type { Task, TaskListResponse, Priority } from "@/types/task";
 
@@ -9,12 +9,14 @@ interface CreateTaskData {
   title: string;
   description: string;
   priority: Priority;
+  target_completion_date?: string | null;
 }
 
 interface UpdateTaskData {
   title?: string;
   description?: string;
   priority?: Priority;
+  target_completion_date?: string | null;
 }
 
 /**

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "src/lib/auth-client";
 
 interface UserMenuProps {
   user: { id: string; name?: string; email: string } | null;

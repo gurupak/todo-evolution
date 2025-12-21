@@ -36,6 +36,9 @@ target-version = "py313"
 select = ["E", "F", "I", "N", "W"]
 ignore = []
 
+[project.scripts]
+dev = "todo_api.dev:main"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
