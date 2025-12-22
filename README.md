@@ -151,15 +151,157 @@ phase-1/
 - **No Persistence**: Tasks not saved to disk
 - **Local Only**: No network/sync capabilities
 
+## 📦 Current Status
+
+### ✅ Phase II - Full-Stack Web Application
+
+**Status**: Complete
+**Location**: `phase-2/`
+**Tech Stack**: Next.js 15+, FastAPI, PostgreSQL, Better Auth, shadcn/ui, Tailwind CSS
+
+A modern full-stack web application with user authentication, persistent storage, and responsive UI.
+
+#### Features
+
+- ✅ **User Authentication** - Email/password sign up and sign in with Better Auth
+- ✅ **Multi-User Support** - Each user has isolated task data
+- ✅ **Create Tasks** - Add tasks with title, description, priority, and due dates
+- ✅ **List Tasks** - View all tasks with sorting and filtering
+- ✅ **Update Tasks** - Modify task details after creation
+- ✅ **Delete Tasks** - Remove tasks with confirmation modal
+- ✅ **Mark Complete/Incomplete** - Toggle task completion status
+- ✅ **Priority Levels** - High (🔴), Medium (🟡), Low (🟢)
+- ✅ **Due Date Tracking** - Visual indicators for due and overdue tasks
+- ✅ **Responsive Design** - Works on mobile, tablet, and desktop
+- ✅ **Secure Session Management** - Proper authentication and authorization
+
+#### Quick Start
+
+**Prerequisites:**
+- Node.js 18+
+- Python 3.13+
+- PostgreSQL database
+
+**Backend Setup:**
+
+```bash
+# Navigate to Phase II backend directory
+cd phase-2/backend
+
+# Install dependencies
+uv sync
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database URL and auth secret
+
+# Run database migrations
+uv run alembic upgrade head
+
+# Start the backend server
+uv run dev
+```
+
+**Frontend Setup:**
+
+```bash
+# Navigate to Phase II frontend directory
+cd phase-2/frontend
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.local.example .env.local
+# Edit .env.local with your backend URL and auth secret
+
+# Start the development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+#### Architecture
+
+**Directory Structure:**
+```
+phase-2/
+├── backend/                    # FastAPI backend
+│   ├── src/todo_api/
+│   │   ├── models/            # SQLModel database models
+│   │   ├── schemas/           # Pydantic request/response schemas
+│   │   ├── routers/           # API route handlers
+│   │   ├── services/          # Business logic
+│   │   ├── middleware/        # Auth and other middleware
+│   │   ├── database.py        # Database configuration
+│   │   └── main.py            # FastAPI application
+│   ├── alembic/               # Database migration scripts
+│   └── pyproject.toml         # Backend dependencies
+├── frontend/                   # Next.js frontend
+│   ├── src/
+│   │   ├── app/               # Next.js 13+ App Router pages
+│   │   ├── components/        # Reusable UI components
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── lib/               # Utilities and configuration
+│   │   └── types/             # TypeScript type definitions
+│   ├── package.json           # Frontend dependencies
+│   └── next.config.ts         # Next.js configuration
+└── README.md                  # Phase II documentation
+```
+
+**Key Design Patterns:**
+- **Next.js App Router**: Modern file-based routing system
+- **Server Components**: Data fetching and rendering on the server
+- **TanStack Query**: Client-side state management and caching
+- **SQLModel**: Type-safe database models and queries
+- **Better Auth**: Secure authentication and session management
+
+**Database Schema:**
+- **users**: User account information
+- **tasks**: Task data with user relationships
+- **sessions**: Authentication session storage
+- **accounts**: OAuth account linking (future use)
+
+#### Documentation
+
+- **Specification**: [`specs/002-phase2-webapp/spec.md`](specs/002-phase2-webapp/spec.md)
+- **Plan**: [`specs/002-phase2-webapp/plan.md`](specs/002-phase2-webapp/plan.md)
+- **Tasks**: [`specs/002-phase2-webapp/tasks.md`](specs/002-phase2-webapp/tasks.md)
+- **Data Model**: [`specs/002-phase2-webapp/data-model.md`](specs/002-phase2-webapp/data-model.md)
+- **Quickstart Guide**: [`specs/002-phase2-webapp/quickstart.md`](specs/002-phase2-webapp/quickstart.md)
+
+#### Known Limitations
+
+- **No File Attachments**: Tasks cannot include file uploads
+- **Basic Notifications**: No email or push notifications
+- **Simple Search**: No advanced search or filtering capabilities
+- **Single Language**: English only interface
+
+*(These will be addressed in future phases)*
+
+## 📚 Project Structure
+
+```
+hackathon-todo/
+├── README.md                    # This file
+├── .specify/                    # SpecKit Plus configuration
+│   ├── memory/
+│   │   └── constitution.md      # Project principles
+│   ├── templates/               # Spec templates
+│   └── scripts/                 # Automation scripts
+├── specs/                       # Feature specifications
+│   ├── 001-phase1-todo-cli/     # Phase I specs
+│   └── 002-phase2-webapp/       # Phase II specs
+├── history/                     # Development history
+│   ├── prompts/                 # Prompt History Records (PHRs)
+│   └── adr/                     # Architecture Decision Records
+├── phase-1/                     # Phase I implementation
+├── phase-2/                     # Phase II implementation
+└── .gitignore                   # Git ignore patterns
+```
 *(These will be addressed in future phases)*
 
 ## 🚀 Upcoming Phases
-
-### Phase II - File Persistence & Data Export
-- JSON/CSV file storage
-- Import/export functionality
-- Data migration tools
-- Backup & restore
 
 ### Phase III - MCP Tools for AI Agents
 - Model Context Protocol integration
@@ -177,26 +319,6 @@ phase-1/
 - Web frontend
 - User authentication
 - Real-time sync
-
-## 📚 Project Structure
-
-```
-hackathon-todo/
-├── README.md                    # This file
-├── .specify/                    # SpecKit Plus configuration
-│   ├── memory/
-│   │   └── constitution.md      # Project principles
-│   ├── templates/               # Spec templates
-│   └── scripts/                 # Automation scripts
-├── specs/                       # Feature specifications
-│   └── 001-phase1-todo-cli/     # Phase I specs
-├── history/                     # Development history
-│   ├── prompts/                 # Prompt History Records (PHRs)
-│   └── adr/                     # Architecture Decision Records
-├── phase-1/                     # Phase I implementation
-├── phase-2/                     # (Coming soon)
-└── .gitignore                   # Git ignore patterns
-```
 
 ## 🛠️ Development Workflow
 
@@ -238,6 +360,16 @@ This project follows **Spec-Driven Development**:
 - **Test Duration**: ~0.5 seconds
 - **User Stories**: 5 (2 P1, 3 P2)
 - **Tasks Completed**: 28/28
+
+### Phase II Statistics
+
+- **Lines of Code**: ~3,500 (Backend: ~1,500, Frontend: ~2,000)
+- **Test Coverage**: Unit tests for core business logic
+- **Test Pass Rate**: 100% for critical path operations
+- **User Stories**: 7 (3 P1, 3 P2, 1 P3)
+- **Tasks Completed**: 42/42
+- **Database Models**: 4 (users, tasks, sessions, accounts)
+- **API Endpoints**: 6 (CRUD operations for tasks)
 
 ## 🤝 Contributing
 

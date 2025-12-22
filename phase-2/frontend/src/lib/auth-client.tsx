@@ -6,11 +6,13 @@ import { createAuthClient } from "better-auth/react";
  * Points to /api/auth/* endpoints served by Next.js (same origin)
  */
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000", // Next.js app serves Better Auth at /api/auth/*
+  baseURL: typeof window !== 'undefined'
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000", // Use the current origin in browser, fallback for SSR
   fetchOptions: {
     credentials: "include", // Include cookies in requests (required for auth)
     cache: "no-store",
   },
 });
 
-export const { signIn, signUp, signOut, useSession } = authClient;
+export const { signIn, signUp, signOut, useSession, forgotPassword, resetPassword } = authClient;

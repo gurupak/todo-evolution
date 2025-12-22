@@ -19,15 +19,10 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const handleSignOut = async () => {
     setIsLoading(true);
-    try {
-      await authClient.signOut();
-      router.push("/auth/signin");
-    } catch (error) {
-      console.error("Sign out error:", error);
-    } finally {
-      setIsLoading(false);
-      setIsOpen(false);
-    }
+    // Redirect to the signout page which will handle the signout process
+    router.push("/auth/signout");
+    router.refresh(); // Refresh to ensure UI updates
+    setIsOpen(false);
   };
 
   if (!user) {
