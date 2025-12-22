@@ -11,7 +11,8 @@ import { cookies } from "next/headers";
  * to the FastAPI backend so it can validate sessions.
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 async function proxyRequest(request: NextRequest, path: string[]) {
   const pathname = path.join("/");
@@ -20,26 +21,39 @@ async function proxyRequest(request: NextRequest, path: string[]) {
 
   // Get all cookies from Next.js request
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("better-auth.session_token");
 
-  console.log("Proxy: Forwarding to FastAPI:", url);
-  console.log(
-    "Proxy: Session token:",
-    sessionToken?.value ? "PRESENT" : "MISSING",
+  // Better Auth uses different cookie names, get all cookies that start with "better-auth" or "__Secure-better-auth"
+  const allCookies = cookieStore.getAll();
+  console.log("Proxy: All cookies:", allCookies.map(c => c.name).join(", "));
+
+  // Filter for Better Auth related cookies
+  const betterAuthCookies = allCookies.filter(cookie =>
+    cookie.name.includes('better-auth')
   );
 
-  // Build Cookie header from Better Auth session
-  const cookieHeader = sessionToken
-    ? `better-auth.session_token=${sessionToken.value}`
-    : "";
+  console.log("Proxy: Better Auth cookies found:", betterAuthCookies.length);
+
+  // Build Cookie header from Better Auth cookies
+  const cookieHeaders: string[] = [];
+  betterAuthCookies.forEach(cookie => {
+    cookieHeaders.push(`${cookie.name}=${cookie.value}`);
+  });
+
+  const cookieHeader = cookieHeaders.join("; ");
 
   // Forward the request to FastAPI with cookies
   const response = await fetch(url, {
     method: request.method,
     headers: {
       "Content-Type": "application/json",
-      // Forward Better Auth session cookie to FastAPI
+      // Forward Better Auth session cookies to FastAPI
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      // Forward other headers that might be needed
+      "Accept": "application/json",
+      // Forward authorization header if present
+      ...(request.headers.get("authorization") ? { "Authorization": request.headers.get("authorization")! } : {}),
+      // Forward user-agent for security checks
+      "User-Agent": request.headers.get("user-agent") || "NextJS-Proxy",
     },
     body:
       request.method !== "GET" && request.body
@@ -56,12 +70,18 @@ async function proxyRequest(request: NextRequest, path: string[]) {
   }
 
   // Create Next.js response with the same status and data
-  return new NextResponse(data, {
+  const nextResponse = new NextResponse(data, {
     status: response.status,
     headers: {
       "Content-Type": "application/json",
+      // Add CORS headers to the response
+      "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
+
+  return nextResponse;
 }
 
 export async function GET(
@@ -102,4 +122,21 @@ export async function DELETE(
 ) {
   const { path } = await params;
   return proxyRequest(request, path);
+}
+
+// Add OPTIONS method for CORS preflight
+export async function OPTIONS(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
+  const response = new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
+      "Access-Control-Allow-Credentials": "true",
+    },
+  });
+  return response;
 }

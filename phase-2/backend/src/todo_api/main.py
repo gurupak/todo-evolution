@@ -13,14 +13,22 @@ app = FastAPI(
 )
 
 # Configure CORS
+cors_origins = [
+    settings.frontend_url,
+    "http://localhost:3000",  # Local development
+    "http://localhost:3001",  # Alternative local port
+    "https://noble-perfection-production-7c4a.up.railway.app",  # Production frontend
+]
+
+# Add the production frontend domain if not already included
+if settings.frontend_url not in cors_origins:
+    cors_origins.append(settings.frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.frontend_url,
-        "https://noble-perfection-production-7c4a.up.railway.app",
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

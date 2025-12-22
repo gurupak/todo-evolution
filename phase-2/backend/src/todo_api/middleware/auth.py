@@ -34,8 +34,21 @@ async def get_current_user_id(
     # Debug logging
     print(f"DEBUG: Cookie header received: {cookie}")
 
-    # Parse the session token from Cookie header
-    session_token = parse_cookie_header(cookie, "better-auth.session_token")
+    # Try different possible cookie names that Better Auth might use
+    session_token = None
+
+    # Check for the expected cookie names based on browser inspection
+    possible_cookie_names = [
+        "better-auth.session_token",           # Default name
+        "__Secure-better-auth.session_token", # Secure name used in production
+        "__Host-better-auth.session_token",   # Host name (more restrictive)
+    ]
+
+    for cookie_name in possible_cookie_names:
+        session_token = parse_cookie_header(cookie, cookie_name)
+        if session_token:
+            print(f"DEBUG: Found session token in cookie: {cookie_name}")
+            break
 
     print(f"DEBUG: Parsed session token: {session_token}")
 
@@ -47,7 +60,11 @@ async def get_current_user_id(
 
     # Parse the session token (Better Auth format: token.signature)
     try:
-        token_value = session_token.split(".")[0]
+        # Handle the case where token includes signature (token.signature format)
+        if "." in session_token:
+            token_value = session_token.split(".")[0]
+        else:
+            token_value = session_token
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

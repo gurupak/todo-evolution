@@ -26,9 +26,10 @@ export const auth = betterAuth({
   advanced: {
     // Configure cookies for cross-browser support
     defaultCookieAttributes: {
-      sameSite: "lax", // Use 'lax' for same-site (localhost:3000)
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Use 'none' for cross-site in production
       secure: process.env.NODE_ENV === "production", // Secure in production only
       httpOnly: true,
+      path: "/",
     },
   },
 });
