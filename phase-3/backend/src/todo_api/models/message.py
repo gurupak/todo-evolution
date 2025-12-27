@@ -17,6 +17,7 @@ class Message(SQLModel, table=True):
     """
 
     __tablename__ = "message"
+    __table_args__ = {"extend_existing": True}
 
     id: UUID = Field(
         default_factory=uuid4,

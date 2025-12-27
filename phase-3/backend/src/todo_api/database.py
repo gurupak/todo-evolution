@@ -8,6 +8,9 @@ from sqlmodel import SQLModel
 
 from .config import settings
 
+# Import all models to ensure they are registered with SQLModel's metadata
+from .models import Task, Conversation, Message  # noqa: F401
+
 # Create async engine
 engine = create_async_engine(
     settings.database_url,

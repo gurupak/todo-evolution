@@ -12,6 +12,8 @@ from todo_api.models.enums import PriorityEnum
 class Task(SQLModel, table=True):
     """Task model for persistent storage."""
 
+    __table_args__ = {"extend_existing": True}
+
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: str = Field(index=True)  # Better Auth uses string IDs
     title: str = Field(max_length=200)

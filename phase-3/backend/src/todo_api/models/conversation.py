@@ -15,6 +15,7 @@ class Conversation(SQLModel, table=True):
     """
 
     __tablename__ = "conversation"
+    __table_args__ = {"extend_existing": True}
 
     id: UUID = Field(
         default_factory=uuid4,
