@@ -267,3 +267,11 @@ uv run ruff format .   # Format code
 - **No file I/O**: No JSON/CSV export (Phase I scope)
 
 ---
+
+## Active Technologies
+- Python 3.13+ (backend), TypeScript/Next.js 15 (frontend) + FastAPI 0.115+, FastMCP (latest), OpenAI Agents SDK Python 0.2.9+, OpenAI ChatKit React 1.2.0+, SQLModel 0.0.22+, Better Auth (existing) (003-todo-ai-chatbot)
+- Neon PostgreSQL (existing from Phase II) with new tables: conversation, message (003-todo-ai-chatbot)
+- TypeScript 5.x with Next.js 15.1.0 (App Router) (004-homepage)
+
+## Recent Changes
+- 003-todo-ai-chatbot: Added Python 3.13+ (backend), TypeScript/Next.js 15 (frontend) + FastAPI 0.115+, FastMCP (latest), OpenAI Agents SDK Python 0.2.9+, OpenAI ChatKit React 1.2.0+, SQLModel 0.0.22+, Better Auth (existing)

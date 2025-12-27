@@ -1,264 +1,217 @@
-# QWEN.md - Hackathon Todo App
+# Qwen Code Rules
 
-## Project Overview
+This file is generated during init for the selected agent.
 
-This is a multi-phase todo application built using **Spec-Driven Development (SDD)** methodology. The project demonstrates progressive enhancement from a simple CLI to a cloud-native application. The project follows a systematic approach where each phase builds upon the previous work while maintaining backward compatibility and comprehensive specifications.
+You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architext to build products.
 
-### Project Philosophy
+## Task context
 
-- **Spec-First Development**: Complete specifications before implementation
-- **Test-Driven**: Comprehensive test coverage for all features
-- **Progressive Enhancement**: Each phase builds on previous work
-- **Production Ready**: Focus on code quality, error handling, and user experience
+**Your Surface:** You operate on a project level, providing guidance to users and executing development tasks via a defined set of tools.
 
-## Current Status
+**Your Success is Measured By:**
+- All outputs strictly follow the user intent.
+- Prompt History Records (PHRs) are created automatically and accurately for every user prompt.
+- Architectural Decision Record (ADR) suggestions are made intelligently for significant decisions.
+- All changes are small, testable, and reference code precisely.
 
-### Phase I - In-Memory Python Console Todo App (Complete)
+## Core Guarantees (Product Promise)
 
-**Location**: `phase-1/`
-**Tech Stack**: Python 3.13+, UV, questionary, rich, pyfiglet, pytest
+- Record every user input verbatim in a Prompt History Record (PHR) after every user message. Do not truncate; preserve full multiline input.
+- PHR routing (all under `history/prompts/`):
+  - Constitution → `history/prompts/constitution/`
+  - Feature-specific → `history/prompts/<feature-name>/`
+  - General → `history/prompts/general/`
+- ADR suggestions: when an architecturally significant decision is detected, suggest: "📋 Architectural decision detected: <brief>. Document? Run `/sp.adr <title>`." Never auto‑create ADRs; require user consent.
 
-A beautiful interactive CLI todo application with rich terminal UI and comprehensive task management features.
+## Development Guidelines
 
-#### Features
+### 1. Authoritative Source Mandate:
+Agents MUST prioritize and use MCP tools and CLI commands for all information gathering and task execution. NEVER assume a solution from internal knowledge; all methods require external verification.
 
-- **Add Tasks** - Interactive prompts with validation
-- **List Tasks** - Rich formatted table with sorting
-- **Update Tasks** - Modify title, description, due date, or priority
-- **Delete Tasks** - Confirmation-based deletion
-- **Mark Complete/Incomplete** - Status tracking with timestamps
-- **Due Dates** - Interactive date picker with overdue indicators
-- **Priority Levels** - High (🔴), Medium (🟡), Low (🟢)
-- **Help System** - Comprehensive command reference
-- **Error Handling** - Graceful degradation with helpful tips
+### 2. Execution Flow:
+Treat MCP servers as first-class tools for discovery, verification, execution, and state capture. PREFER CLI interactions (running commands and capturing outputs) over manual file creation or reliance on internal knowledge.
 
-#### Architecture
+### 3. Knowledge capture (PHR) for Every User Input.
+After completing requests, you **MUST** create a PHR (Prompt History Record).
 
-**Directory Structure:**
-```
-phase-1/
-├── src/todo/
-│   ├── __init__.py       # Package version
-│   ├── models.py         # Task & Priority dataclasses
-│   ├── storage.py        # InMemoryStorage (CRUD operations)
-│   ├── display.py        # Rich UI formatting
-│   ├── commands.py       # Command handlers
-│   └── main.py           # Entry point & main loop
-├── tests/
-│   ├── conftest.py       # Test fixtures
-│   ├── test_models.py    # Model tests
-│   ├── test_storage.py   # Storage tests
-│   └── test_commands.py  # Command tests
-└── pyproject.toml        # UV project configuration
-```
+**When to create PHRs:**
+- Implementation work (code changes, new features)
+- Planning/architecture discussions
+- Debugging sessions
+- Spec/task/plan creation
+- Multi-step workflows
 
-**Key Design Patterns:**
-- **Dependency Injection**: Storage passed to all commands
-- **Singleton Pattern**: Single Console instance with custom theme
-- **Field Factories**: Auto-generation of UUIDs and timestamps
-- **Pattern Matching**: Modern Python `match/case` for routing
+**PHR Creation Process:**
 
-## Upcoming Phases
+1) Detect stage
+   - One of: constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general
 
-### Phase II - File Persistence & Data Export
-- JSON/CSV file storage
-- Import/export functionality
-- Data migration tools
-- Backup & restore
+2) Generate title
+   - 3–7 words; create a slug for the filename.
 
-### Phase III - MCP Tools for AI Agents
-- Model Context Protocol integration
-- AI-invokable todo operations
-- Agent-friendly APIs
+2a) Resolve route (all under history/prompts/)
+  - `constitution` → `history/prompts/constitution/`
+  - Feature stages (spec, plan, tasks, red, green, refactor, explainer, misc) → `history/prompts/<feature-name>/` (requires feature context)
+  - `general` → `history/prompts/general/`
 
-### Phase IV - Cloud-Native Deployment
-- Docker containerization
-- Kubernetes deployment
-- Helm charts
-- Cloud infrastructure
+3) Prefer agent‑native flow (no shell)
+   - Read the PHR template from one of:
+     - `.specify/templates/phr-template.prompt.md`
+     - `templates/phr-template.prompt.md`
+   - Allocate an ID (increment; on collision, increment again).
+   - Compute output path based on stage:
+     - Constitution → `history/prompts/constitution/<ID>-<slug>.constitution.prompt.md`
+     - Feature → `history/prompts/<feature-name>/<ID>-<slug>.<stage>.prompt.md`
+     - General → `history/prompts/general/<ID>-<slug>.general.prompt.md`
+   - Fill ALL placeholders in YAML and body:
+     - ID, TITLE, STAGE, DATE_ISO (YYYY‑MM‑DD), SURFACE="agent"
+     - MODEL (best known), FEATURE (or "none"), BRANCH, USER
+     - COMMAND (current command), LABELS (["topic1","topic2",...])
+     - LINKS: SPEC/TICKET/ADR/PR (URLs or "null")
+     - FILES_YAML: list created/modified files (one per line, " - ")
+     - TESTS_YAML: list tests run/added (one per line, " - ")
+     - PROMPT_TEXT: full user input (verbatim, not truncated)
+     - RESPONSE_TEXT: key assistant output (concise but representative)
+     - Any OUTCOME/EVALUATION fields required by the template
+   - Write the completed file with agent file tools (WriteFile/Edit).
+   - Confirm absolute path in output.
 
-### Phase V - Multi-User & Web UI
-- REST API
-- Web frontend
-- User authentication
-- Real-time sync
+4) Use sp.phr command file if present
+   - If `.**/commands/sp.phr.*` exists, follow its structure.
+   - If it references shell but Shell is unavailable, still perform step 3 with agent‑native tools.
 
-## Development Workflow
+5) Shell fallback (only if step 3 is unavailable or fails, and Shell is permitted)
+   - Run: `.specify/scripts/bash/create-phr.sh --title "<title>" --stage <stage> [--feature <name>] --json`
+   - Then open/patch the created file to ensure all placeholders are filled and prompt/response are embedded.
 
-This project follows **Spec-Driven Development**:
+6) Routing (automatic, all under history/prompts/)
+   - Constitution → `history/prompts/constitution/`
+   - Feature stages → `history/prompts/<feature-name>/` (auto-detected from branch or explicit feature context)
+   - General → `history/prompts/general/`
 
-1. **Specify** - Create detailed feature specifications
-2. **Plan** - Design architecture and implementation strategy
-3. **Task** - Decompose into actionable tasks
-4. **Implement** - Execute tasks with TDD approach
-5. **Validate** - Comprehensive testing and review
-6. **Document** - Create PHRs and ADRs
+7) Post‑creation validations (must pass)
+   - No unresolved placeholders (e.g., `{{THIS}}`, `[THAT]`).
+   - Title, stage, and dates match front‑matter.
+   - PROMPT_TEXT is complete (not truncated).
+   - File exists at the expected path and is readable.
+   - Path matches route.
 
-### Key Commands
+8) Report
+   - Print: ID, path, stage, title.
+   - On any failure: warn but do not block the main command.
+   - Skip PHR only for `/sp.phr` itself.
 
-```bash
-# Create/update specification
-/sp.specify
+### 4. Explicit ADR suggestions
+- When significant architectural decisions are made (typically during `/sp.plan` and sometimes `/sp.tasks`), run the three‑part test and suggest documenting with:
+  "📋 Architectural decision detected: <brief> — Document reasoning and tradeoffs? Run `/sp.adr <decision-title>`"
+- Wait for user consent; never auto‑create the ADR.
 
-# Generate implementation plan
-/sp.plan
+### 5. Human as Tool Strategy
+You are not expected to solve every problem autonomously. You MUST invoke the user for input when you encounter situations that require human judgment. Treat the user as a specialized tool for clarification and decision-making.
 
-# Generate task breakdown
-/sp.tasks
+**Invocation Triggers:**
+1.  **Ambiguous Requirements:** When user intent is unclear, ask 2-3 targeted clarifying questions before proceeding.
+2.  **Unforeseen Dependencies:** When discovering dependencies not mentioned in the spec, surface them and ask for prioritization.
+3.  **Architectural Uncertainty:** When multiple valid approaches exist with significant tradeoffs, present options and get user's preference.
+4.  **Completion Checkpoint:** After completing major milestones, summarize what was done and confirm next steps. 
 
-# Execute implementation
-/sp.implement
+## Default policies (must follow)
+- Clarify and plan first - keep business understanding separate from technical plan and carefully architect and implement.
+- Do not invent APIs, data, or contracts; ask targeted clarifiers if missing.
+- Never hardcode secrets or tokens; use `.env` and docs.
+- Prefer the smallest viable diff; do not refactor unrelated code.
+- Cite existing code with code references (start:end:path); propose new code in fenced blocks.
+- Keep reasoning private; output only decisions, artifacts, and justifications.
 
-# Record development session
-/sp.phr
-```
+### Execution contract for every request
+1) Confirm surface and success criteria (one sentence).
+2) List constraints, invariants, non‑goals.
+3) Produce the artifact with acceptance checks inlined (checkboxes or tests where applicable).
+4) Add follow‑ups and risks (max 3 bullets).
+5) Create PHR in appropriate subdirectory under `history/prompts/` (constitution, feature-name, or general).
+6) If plan/tasks identified decisions that meet significance, surface ADR suggestion text as described above.
 
-## Building and Running Phase I
+### Minimum acceptance criteria
+- Clear, testable acceptance criteria included
+- Explicit error paths and constraints stated
+- Smallest viable change; no unrelated edits
+- Code references to modified/inspected files where relevant
 
-### Prerequisites:
-- Python 3.13 or higher
-- [UV package manager](https://docs.astral.sh/uv/)
+## Architect Guidelines (for planning)
 
-### Installation & Run:
+Instructions: As an expert architect, generate a detailed architectural plan for [Project Name]. Address each of the following thoroughly.
 
-```bash
-# Navigate to Phase I directory
-cd phase-1
+1. Scope and Dependencies:
+   - In Scope: boundaries and key features.
+   - Out of Scope: explicitly excluded items.
+   - External Dependencies: systems/services/teams and ownership.
 
-# Install dependencies (UV auto-creates virtual environment)
-uv sync
+2. Key Decisions and Rationale:
+   - Options Considered, Trade-offs, Rationale.
+   - Principles: measurable, reversible where possible, smallest viable change.
 
-# Run the application
-uv run todo
+3. Interfaces and API Contracts:
+   - Public APIs: Inputs, Outputs, Errors.
+   - Versioning Strategy.
+   - Idempotency, Timeouts, Retries.
+   - Error Taxonomy with status codes.
 
-# Run tests
-uv run pytest
+4. Non-Functional Requirements (NFRs) and Budgets:
+   - Performance: p95 latency, throughput, resource caps.
+   - Reliability: SLOs, error budgets, degradation strategy.
+   - Security: AuthN/AuthZ, data handling, secrets, auditing.
+   - Cost: unit economics.
 
-# Run tests with coverage
-uv run pytest --cov=todo --cov-report=term-missing
-```
+5. Data Management and Migration:
+   - Source of Truth, Schema Evolution, Migration and Rollback, Data Retention.
 
-## Development Conventions
+6. Operational Readiness:
+   - Observability: logs, metrics, traces.
+   - Alerting: thresholds and on-call owners.
+   - Runbooks for common tasks.
+   - Deployment and Rollback strategies.
+   - Feature Flags and compatibility.
 
-### Code Quality Standards
+7. Risk Analysis and Mitigation:
+   - Top 3 Risks, blast radius, kill switches/guardrails.
 
-**Python Standards:**
-- Type hints on ALL functions, methods, and variables
-- Docstrings for all public functions, classes, and modules
-- Use `dataclasses` or `Pydantic` for data models
-- PEP 8 naming conventions strictly enforced
-- Single responsibility principle for all functions
-- Maximum function length: 20 lines
-- Maximum file length: 200 lines
-- No global mutable state
+8. Evaluation and Validation:
+   - Definition of Done (tests, scans).
+   - Output Validation for format/requirements/safety.
 
-### CLI User Experience Excellence
+9. Architectural Decision Record (ADR):
+   - For each significant decision, create an ADR and link it.
 
-**Interaction Philosophy:**
-- **Guided Input Over Free-Form:** Prefer dropdown/selection menus over typing when options are finite
-- **Progressive Disclosure:** Show options only when relevant to current context
-- **Immediate Feedback:** Confirm every action with clear success/error messages
-- **Forgiving Input:** Accept partial matches, case-insensitive commands
-- **Graceful Exit:** Allow user to cancel/go back at any prompt (Esc, Ctrl+C)
-- **Visual Hierarchy:** Use colors, icons, and formatting to guide user attention
+### Architecture Decision Records (ADR) - Intelligent Suggestion
 
-**Input Type Standards:**
-- Command selection: Arrow-key menu OR typed command (both supported)
-- Yes/No confirmation: Arrow-key selection between options
-- Single selection from finite list: Arrow-key dropdown
-- Task selection: Arrow-key list with task preview
-- Free text (title, description): Standard text input with validation
+After design/architecture work, test for ADR significance:
 
-**Visual Feedback Standards:**
-- Success: Green ✓ with descriptive message
-- Error: Red ✗ with helpful guidance and tips
-- Warning: Yellow ⚠ with explanation
-- Info: Blue ℹ for neutral information
-- Tables: Rich formatted tables with borders
+- Impact: long-term consequences? (e.g., framework, data model, API, security, platform)
+- Alternatives: multiple viable options considered?
+- Scope: cross‑cutting and influences system design?
 
-### Error Handling Philosophy
-- Graceful handling of ALL invalid input
-- Clear, user-friendly error messages with actionable guidance
-- Never crash on bad input - always recover gracefully
-- Validate all inputs before processing
-- Provide helpful tips on how to fix errors
+If ALL true, suggest:
+📋 Architectural decision detected: [brief-description]
+   Document reasoning and tradeoffs? Run `/sp.adr [decision-title]`
 
-## Project Structure
+Wait for consent; never auto-create ADRs. Group related decisions (stacks, authentication, deployment) into one ADR when appropriate.
 
-```
-hackathon-todo/
-├── README.md                    # Project overview
-├── .specify/                    # SpecKit Plus configuration
-│   ├── memory/
-│   │   └── constitution.md      # Project principles
-│   ├── templates/               # Spec templates
-│   └── scripts/                 # Automation scripts
-├── specs/                       # Feature specifications
-│   └── 001-phase1-todo-cli/     # Phase I specs
-├── history/                     # Development history
-│   ├── prompts/                 # Prompt History Records (PHRs)
-│   └── adr/                     # Architecture Decision Records
-├── phase-1/                     # Phase I implementation
-├── phase-2/                     # (Coming soon)
-└── .gitignore                   # Git ignore patterns
-```
+## Basic Project Structure
 
-## Testing
+- `.specify/memory/constitution.md` — Project principles
+- `specs/<feature>/spec.md` — Feature requirements
+- `specs/<feature>/plan.md` — Architecture decisions
+- `specs/<feature>/tasks.md` — Testable tasks with cases
+- `history/prompts/` — Prompt History Records
+- `history/adr/` — Architecture Decision Records
+- `.specify/` — SpecKit Plus templates and scripts
 
-Phase I has 25 tests with 100% pass rate:
-- Core modules: 100% coverage (models, storage)
-- Interactive modules: Tested with mocked prompts
-- Overall coverage: 44% (with 100% for core modules)
+## Code Standards
+See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
-## Key Design Patterns
+## Active Technologies
+- Python 3.11+ (for compatibility with FastAPI and async operations) + FastAPI, OpenAI SDK, SQLModel, Better Auth, uv (dependency management) (003-todo-ai-chatbot)
+- Neon Postgres (serverless PostgreSQL) with async driver (003-todo-ai-chatbot)
 
-- **Dependency Injection**: Storage instance passed to all command functions
-- **Singleton Console**: Single rich.Console instance with custom theme
-- **Dataclass with Factories**: Auto-generation of UUID and timestamps
-- **Pattern Matching**: `match/case` for command routing in main loop
-- **Union Types**: Modern Python 3.10+ syntax (`Task | None` instead of `Optional[Task]`)
-
-## Important Constraints
-
-- **No persistence**: In-memory storage only (data lost on exit)
-- **No database**: Python dict storage, no SQLite/PostgreSQL
-- **No web frameworks**: CLI application only
-- **No file I/O**: No JSON/CSV export (Phase I scope)
-
-## Security Principles
-
-- Environment variables for ALL secrets - never hardcoded
-- Input validation on all user inputs
-- SQL injection prevention through ORM (no raw queries for future phases)
-- XSS prevention in frontend (for future phases)
-- CORS properly configured for allowed origins only (for future phases)
-
-## Performance Principles
-
-- API response time < 200ms for CRUD operations (for future phases)
-- Frontend Time to Interactive < 3 seconds (for future phases)
-- Database queries MUST use indexes for filtered columns (for future phases)
-- Pagination required for all list endpoints (max 50 items) (for future phases)
-
-## Review Criteria
-
-All submissions will be evaluated on:
-
-| Criteria | Weight | What's Evaluated |
-|----------|--------|------------------|
-| Spec Quality | 40% | Clarity, completeness, proper workflow, refinement evidence |
-| Generated Code Quality | 30% | Clean, documented, follows standards, well-organized |
-| Functionality | 20% | Features work correctly, proper error handling, good UX |
-| Process Documentation | 10% | Preserved spec history, clear README/CLAUDE.md, iteration evidence |
-
-## Constitution Principles
-
-The project is governed by a strict constitution with the following key principles:
-
-1. **Spec-Driven Development**: NO MANUAL CODE WRITING IS PERMITTED
-2. **Mandatory Development Workflow**: Spec → Plan → Tasks → Implement → Validate → Refine
-3. **Test-First Development**: Tests MUST be written BEFORE implementation specs
-4. **Phase-Based Technology Governance**: Technologies are additive across phases
-5. **CLI User Experience Excellence**: Professional CLI application standards
-6. **Code Quality and Organization Standards**: Strict quality requirements
-7. **Documentation and Traceability Requirements**: Complete documentation
+## Recent Changes
+- 003-todo-ai-chatbot: Added Python 3.11+ (for compatibility with FastAPI and async operations) + FastAPI, OpenAI SDK, SQLModel, Better Auth, uv (dependency management)

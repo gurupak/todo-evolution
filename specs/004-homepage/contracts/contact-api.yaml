@@ -1,0 +1,194 @@
+openapi: 3.1.0
+info:
+  title: Todo-Evolution Contact API
+  description: API endpoint for handling contact form submissions from the homepage
+  version: 1.0.0
+  contact:
+    name: Todo-Evolution Team
+    email: team@todo-evolution.com
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://todo-evolution.com
+    description: Production server
+
+paths:
+  /api/contact:
+    post:
+      summary: Submit contact form
+      description: |
+        Handles contact form submissions from the homepage. Validates input,
+        sends email via Resend API, and returns success/error response.
+
+        Rate limited to 5 requests per IP per hour to prevent spam.
+      operationId: submitContactForm
+      tags:
+        - Contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactSubmissionRequest'
+            examples:
+              basic:
+                summary: Basic contact form submission
+                value:
+                  name: "John Doe"
+                  email: "john@example.com"
+                  message: "I'm interested in learning more about Todo-Evolution for my team."
+              withSubject:
+                summary: Contact form with custom subject
+                value:
+                  name: "Jane Smith"
+                  email: "jane@company.com"
+                  message: "We need enterprise features for 500+ users."
+                  subject: "Enterprise Inquiry"
+      responses:
+        '200':
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactSubmissionResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    id: "4ef2ae98-7ab1-4edd-9cb1-3e8f3e3e3e3e"
+        '400':
+          description: Validation error - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              examples:
+                invalidEmail:
+                  value:
+                    error: "Validation failed"
+                    issues:
+                      - field: "email"
+                        message: "Invalid email address"
+                messageTooShort:
+                  value:
+                    error: "Validation failed"
+                    issues:
+                      - field: "message"
+                        message: "Message must be at least 10 characters"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimited:
+                  value:
+                    error: "Too many requests. Please try again later."
+        '500':
+          description: Server error - failed to send email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailFailed:
+                  value:
+                    error: "Failed to send email. Please try again later."
+
+components:
+  schemas:
+    ContactSubmissionRequest:
+      type: object
+      required:
+        - name
+        - email
+        - message
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          pattern: '^[a-zA-Z\s''-]+$'
+          description: Sender's full name (letters, spaces, hyphens, apostrophes only)
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Sender's email address (valid email format required)
+          example: "john@example.com"
+        message:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: Message content (10-1000 characters)
+          example: "I'm interested in Todo-Evolution for my team of 50 users. Do you offer enterprise pricing?"
+        subject:
+          type: string
+          maxLength: 200
+          description: Optional custom subject line (defaults to "New Contact Form")
+          example: "Enterprise Inquiry"
+
+    ContactSubmissionResponse:
+      type: object
+      required:
+        - success
+        - id
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the email was sent successfully
+          example: true
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the sent email (from Resend API)
+          example: "4ef2ae98-7ab1-4edd-9cb1-3e8f3e3e3e3e"
+
+    ValidationError:
+      type: object
+      required:
+        - error
+        - issues
+      properties:
+        error:
+          type: string
+          description: Error type description
+          example: "Validation failed"
+        issues:
+          type: array
+          description: List of validation errors
+          items:
+            type: object
+            required:
+              - field
+              - message
+            properties:
+              field:
+                type: string
+                description: Name of the field that failed validation
+                example: "email"
+              message:
+                type: string
+                description: Human-readable error message
+                example: "Invalid email address"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: "Failed to send email. Please try again later."
+
+  securitySchemes:
+    # No authentication required for public contact form
+    # Rate limiting handled by middleware
+
+tags:
+  - name: Contact
+    description: Contact form submission endpoints
