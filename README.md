@@ -301,24 +301,114 @@ hackathon-todo/
 ```
 *(These will be addressed in future phases)*
 
-## 🚀 Upcoming Phases
+### ✅ Phase III - AI Chatbot Integration
 
-### Phase III - MCP Tools for AI Agents
-- Model Context Protocol integration
-- AI-invokable todo operations
-- Agent-friendly APIs
+**Status**: Complete  
+**Location**: `phase-3/`  
+**Tech Stack**: OpenAI Agents SDK, FastMCP, React ChatKit, FastAPI, PostgreSQL
 
-### Phase IV - Cloud-Native Deployment
-- Docker containerization
-- Kubernetes deployment
-- Helm charts
-- Cloud infrastructure
+An intelligent AI chatbot integrated into the todo application with conversation history and task management capabilities.
 
-### Phase V - Multi-User & Web UI
-- REST API
-- Web frontend
-- User authentication
-- Real-time sync
+#### Features
+
+- ✅ **AI Chat Interface** - Natural language interaction with OpenAI models
+- ✅ **Task Management via Chat** - Create, update, and manage tasks through conversation
+- ✅ **Conversation History** - Persistent chat history stored in database
+- ✅ **MCP Tools** - Model Context Protocol for AI-invokable operations
+- ✅ **Real-time Responses** - Streaming chat responses with React ChatKit
+- ✅ **Context Awareness** - AI understands user's tasks and provides relevant suggestions
+- ✅ **Multi-turn Conversations** - Maintains context across chat sessions
+
+#### Quick Start
+
+```bash
+# Backend with MCP tools
+cd phase-3/backend
+uv sync
+uv run dev
+
+# Frontend with chat UI
+cd phase-3/frontend
+npm install
+npm run dev
+```
+
+#### Documentation
+
+- **Specification**: [`specs/003-todo-ai-chatbot/spec.md`](specs/003-todo-ai-chatbot/spec.md)
+
+### ✅ Phase IV - Kubernetes Deployment
+
+**Status**: Complete  
+**Location**: `phase-4/`  
+**Tech Stack**: Docker, Kubernetes, Minikube, Helm, Redis, Nginx Ingress
+
+A production-ready cloud-native deployment with container orchestration and service mesh architecture.
+
+#### Features
+
+- ✅ **Docker Images** - Multi-stage builds for backend (297MB) and frontend (208MB)
+- ✅ **Helm Charts** - Production-ready deployment configuration
+- ✅ **Minikube Setup** - Local Kubernetes cluster for development
+- ✅ **Redis Integration** - Bitnami Redis for Dapr state management
+- ✅ **Ingress Routing** - Nginx ingress controller with custom domain (`todo.local`)
+- ✅ **Service Mesh** - Internal service-to-service communication
+- ✅ **Secrets Management** - Kubernetes secrets for sensitive data
+- ✅ **Health Checks** - Liveness and readiness probes
+- ✅ **Security** - Non-root containers, RBAC, network policies
+- ✅ **Scalability** - Configurable replicas (3 backend, 1 frontend)
+
+#### Quick Start
+
+```bash
+cd phase-4
+
+# Setup Minikube cluster
+./scripts/setup-minikube.sh
+
+# Build Docker images
+./scripts/build-images.sh
+
+# Deploy to Kubernetes
+./scripts/deploy.sh
+
+# Open minikube tunnel (keep running)
+minikube tunnel
+
+# Access application
+# Add to hosts: 192.168.49.2 todo.local
+# Visit: http://todo.local
+```
+
+#### Architecture
+
+```
+Browser (http://todo.local)
+    ↓
+Minikube Ingress (nginx)
+    ↓
+Frontend Service → Frontend Pods (Next.js)
+    ↓ (API proxy)
+Backend Service → Backend Pods (FastAPI)
+    ↓
+Neon PostgreSQL (cloud)
+Redis (in-cluster)
+```
+
+#### Documentation
+
+- **Specification**: [`specs/005-phase4-k8s-deployment/spec.md`](specs/005-phase4-k8s-deployment/spec.md)
+- **Scripts**: Automated setup, build, and deployment scripts
+- **Helm Chart**: Production-ready templates with values configuration
+
+## 🚀 Future Phases
+
+### Phase V - Advanced Features
+- Real-time collaboration
+- File attachments
+- Advanced search and filtering
+- Email notifications
+- Mobile app (React Native)
 
 ## 🛠️ Development Workflow
 
