@@ -2,9 +2,8 @@ import { betterAuth } from "better-auth";
 import { Pool } from "pg";
 
 /**
- * Better Auth server instance
- * This handles authentication, session management, and JWT token generation
- * Used in API routes (app/api/auth/[...all]/route.ts)
+ * Better Auth configuration for CLI migrations
+ * This file is used by @better-auth/cli migrate command
  */
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
@@ -14,8 +13,8 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET!,
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Simplified for Phase II
-    sendResetPassword: async ({ user, url, token }, request) => {
+    requireEmailVerification: false,
+    sendResetPassword: async ({user, url, token}, request) => {
       // This function is required for password reset to work
       console.log(`Password reset email would be sent to ${user.email}`);
       console.log(`Reset URL: ${url}`);
@@ -41,22 +40,8 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24, // 24 hours
     updateAge: 60 * 60, // Update session every hour
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 60 * 24, // 24 hours
-    },
   },
-  advanced: {
-    // Configure cookies for cross-browser support
-    defaultCookieAttributes: {
-      sameSite: "lax", // Use 'lax' for HTTP (local development/minikube)
-      secure: false, // Set to false for HTTP
-      httpOnly: true,
-      path: "/",
-    },
-  },
-  // Disable CSRF check for development
   csrf: {
-    enabled: false,
+    enabled: false
   },
 });

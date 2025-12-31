@@ -1,0 +1,38 @@
+# Production environment values
+replicaCount: 3
+
+image:
+  pullPolicy: Always
+
+resources:
+  requests:
+    cpu: {{CPU_REQUEST}}
+    memory: {{MEMORY_REQUEST}}
+  limits:
+    cpu: {{CPU_LIMIT}}
+    memory: {{MEMORY_LIMIT}}
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: {{PRODUCTION_HOST}}
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: {{APP_NAME}}-tls
+      hosts:
+        - {{PRODUCTION_HOST}}
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

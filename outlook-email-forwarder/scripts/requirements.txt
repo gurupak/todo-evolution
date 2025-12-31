@@ -1,0 +1,4 @@
+msal==1.24.1
+requests==2.31.0
+pydantic==2.5.0
+mcp==1.0.0

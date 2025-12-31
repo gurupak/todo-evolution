@@ -2,6 +2,20 @@
 .git/
 .gitignore
 
+# Phase directories (exclude other phases)
+phase-1/
+phase-2/
+phase-3/
+phase-4/
+
+# Project metadata
+.claude/
+.specify/
+.qwen/
+history/
+specs/
+outlook-email-forwarder/
+
 # Node.js
 node_modules/
 npm-debug.log*

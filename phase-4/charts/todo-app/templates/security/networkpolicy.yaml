@@ -1,0 +1,228 @@
+{{- if .Values.networkPolicy.enabled -}}
+---
+# Default deny all ingress and egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-default-deny
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    {{- toYaml .Values.networkPolicy.policyTypes | nindent 4 }}
+
+---
+# Allow frontend ingress from ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-frontend-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.frontend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000
+
+---
+# Allow frontend egress to backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-frontend-egress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.frontend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow egress to backend
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "todo-app.name" . }}
+          app.kubernetes.io/component: backend
+    ports:
+    - protocol: TCP
+      port: 8000
+
+---
+# Allow backend ingress from frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-backend-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.backend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Ingress
+  ingress:
+  # Allow from frontend
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "todo-app.name" . }}
+          app.kubernetes.io/component: frontend
+    ports:
+    - protocol: TCP
+      port: 8000
+  {{- if .Values.dapr.enabled }}
+  # Allow Dapr sidecar communication
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "todo-app.name" . }}
+          app.kubernetes.io/component: backend
+    ports:
+    - protocol: TCP
+      port: 50001
+  {{- end }}
+
+---
+# Allow backend egress to MCP server and external services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-backend-egress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.backend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow egress to MCP server
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "todo-app.name" . }}
+          app.kubernetes.io/component: mcp-server
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow egress to external services (PostgreSQL, OpenAI API)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443   # HTTPS for OpenAI API
+  {{- if .Values.dapr.enabled }}
+  # Allow Dapr sidecar communication
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "todo-app.name" . }}
+          app.kubernetes.io/component: backend
+    ports:
+    - protocol: TCP
+      port: 50001
+  # Allow egress to Redis (Dapr state store)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 6379
+  {{- end }}
+
+---
+# Allow MCP server ingress from backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-mcp-server-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.mcpServer.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: mcp-server
+  policyTypes:
+    - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "todo-app.name" . }}
+          app.kubernetes.io/component: backend
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# Allow MCP server egress (DNS only - minimal permissions)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-mcp-server-egress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.mcpServer.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: mcp-server
+  policyTypes:
+    - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+{{- end }}

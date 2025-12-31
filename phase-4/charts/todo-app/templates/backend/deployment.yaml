@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-app.fullname" . }}-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.backend.labels" . | nindent 4 }}
+  {{- if .Values.dapr.enabled }}
+  annotations:
+    dapr.io/enabled: "true"
+    dapr.io/app-id: {{ .Values.dapr.sidecar.appId | quote }}
+    dapr.io/app-port: {{ .Values.dapr.sidecar.appPort | quote }}
+    dapr.io/config: {{ .Values.dapr.config.name | quote }}
+    dapr.io/sidecar-cpu-request: {{ .Values.dapr.sidecar.resources.requests.cpu | quote }}
+    dapr.io/sidecar-memory-request: {{ .Values.dapr.sidecar.resources.requests.memory | quote }}
+    dapr.io/sidecar-cpu-limit: {{ .Values.dapr.sidecar.resources.limits.cpu | quote }}
+    dapr.io/sidecar-memory-limit: {{ .Values.dapr.sidecar.resources.limits.memory | quote }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "todo-app.name" . }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "todo-app.name" . }}
+        app.kubernetes.io/component: backend
+    spec:
+      serviceAccountName: {{ include "todo-app.backend.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: {{ .Values.backend.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.backend.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.backend.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.backend.securityContext.fsGroup }}
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+          {{- toYaml .Values.backend.env | nindent 10 }}
+        livenessProbe:
+          {{- toYaml .Values.backend.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.backend.readinessProbe | nindent 10 }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.backend.securityContext.allowPrivilegeEscalation }}
+          readOnlyRootFilesystem: {{ .Values.backend.securityContext.readOnlyRootFilesystem }}
+          capabilities:
+            drop:
+              {{- toYaml .Values.backend.securityContext.capabilities.drop | nindent 14 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}

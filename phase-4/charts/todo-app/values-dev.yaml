@@ -1,0 +1,37 @@
+# Development values for todo-app (Minikube overrides)
+# This file overrides production values for local development
+
+global:
+  namespace: todo
+
+# Frontend configuration
+frontend:
+  replicaCount: 1
+  image:
+    repository: todo-frontend
+    tag: "1.0.0"
+    pullPolicy: Never  # Use local images in Minikube
+  ingress:
+    host: todo.local
+    tls:
+      enabled: false
+
+# Backend configuration
+backend:
+  replicaCount: 1
+  image:
+    repository: todo-backend
+    tag: "1.0.0"
+    pullPolicy: Never  # Use local images in Minikube
+
+# MCP Server configuration
+mcpServer:
+  replicaCount: 1
+  image:
+    repository: todo-mcp-server
+    tag: "1.0.0"
+    pullPolicy: Never  # Use local images in Minikube
+
+# Dapr configuration
+dapr:
+  enabled: true

@@ -1,0 +1,37 @@
+{{- if .Values.dapr.enabled -}}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: {{ .Values.dapr.stateStore.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.dapr.stateStore.type }}
+  version: {{ .Values.dapr.stateStore.version }}
+  metadata:
+  - name: redisHost
+    secretKeyRef:
+      name: redis-secret
+      key: host
+  - name: redisPassword
+    secretKeyRef:
+      name: redis-secret
+      key: password
+  - name: enableTLS
+    value: "true"
+  - name: failover
+    value: "true"
+  - name: sentinelMasterName
+    value: "mymaster"
+  - name: maxRetries
+    value: "3"
+  - name: maxRetryBackoff
+    value: "2s"
+{{- if .Values.dapr.stateStore.scopes }}
+scopes:
+{{- range .Values.dapr.stateStore.scopes }}
+- {{ . }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,25 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: { { COMPONENT_NAME } }
+  namespace: { { NAMESPACE } }
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "{{KAFKA_BROKERS}}"
+    - name: authType
+      value: "password"
+    - name: saslUsername
+      secretKeyRef:
+        name: { { SECRET_NAME } }
+        key: kafka-username
+    - name: saslPassword
+      secretKeyRef:
+        name: { { SECRET_NAME } }
+        key: kafka-password
+    - name: consumerGroup
+      value: "{{APP_ID}}"
+  scopes:
+    - { { APP_ID } }

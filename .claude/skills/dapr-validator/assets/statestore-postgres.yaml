@@ -1,0 +1,17 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: { { COMPONENT_NAME } }
+  namespace: { { NAMESPACE } }
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+    - name: connectionString
+      secretKeyRef:
+        name: { { SECRET_NAME } }
+        key: connection-string
+    - name: actorStateStore
+      value: "true"
+  scopes:
+    - { { APP_ID } }

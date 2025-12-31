@@ -1,0 +1,441 @@
+# Helm Values Schema - Contract Definition
+# Purpose: Define expected structure and validation rules for values.yaml
+
+type: object
+required:
+  - global
+  - frontend
+  - backend
+  - dapr
+
+properties:
+  global:
+    type: object
+    required:
+      - namespace
+    properties:
+      namespace:
+        type: string
+        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+        minLength: 1
+        maxLength: 63
+        description: "Kubernetes namespace for all resources"
+        example: "todo"
+
+  frontend:
+    type: object
+    required:
+      - enabled
+      - image
+      - service
+      - resources
+    properties:
+      enabled:
+        type: boolean
+        description: "Enable/disable frontend deployment"
+        default: true
+
+      replicaCount:
+        type: integer
+        minimum: 1
+        maximum: 10
+        description: "Number of frontend pod replicas"
+        default: 1
+
+      image:
+        type: object
+        required:
+          - repository
+          - tag
+          - pullPolicy
+        properties:
+          repository:
+            type: string
+            description: "Docker image repository"
+            example: "todo-frontend"
+          tag:
+            type: string
+            pattern: '^(?!latest$)[a-zA-Z0-9._-]+$'
+            description: "Image tag (never 'latest')"
+            example: "1.0.0"
+          pullPolicy:
+            type: string
+            enum: ["Never", "IfNotPresent", "Always"]
+            description: "Image pull policy"
+            default: "Never"
+
+      service:
+        type: object
+        required:
+          - port
+        properties:
+          port:
+            type: integer
+            minimum: 1
+            maximum: 65535
+            description: "Container port"
+            default: 3000
+          type:
+            type: string
+            enum: ["ClusterIP", "NodePort", "LoadBalancer"]
+            description: "Service type"
+            default: "ClusterIP"
+
+      ingress:
+        type: object
+        properties:
+          enabled:
+            type: boolean
+            default: true
+          host:
+            type: string
+            format: hostname
+            description: "Ingress hostname"
+            example: "todo.local"
+          className:
+            type: string
+            description: "Ingress controller class"
+            default: "nginx"
+
+      resources:
+        type: object
+        required:
+          - requests
+          - limits
+        properties:
+          requests:
+            type: object
+            required:
+              - cpu
+              - memory
+            properties:
+              cpu:
+                type: string
+                pattern: '^[0-9]+m$'
+                description: "CPU request"
+                example: "100m"
+              memory:
+                type: string
+                pattern: '^[0-9]+Mi$'
+                description: "Memory request"
+                example: "128Mi"
+          limits:
+            type: object
+            required:
+              - cpu
+              - memory
+            properties:
+              cpu:
+                type: string
+                pattern: '^[0-9]+m$'
+                description: "CPU limit"
+                example: "500m"
+              memory:
+                type: string
+                pattern: '^[0-9]+Mi$'
+                description: "Memory limit"
+                example: "256Mi"
+
+      securityContext:
+        type: object
+        required:
+          - runAsNonRoot
+          - runAsUser
+          - runAsGroup
+        properties:
+          runAsNonRoot:
+            type: boolean
+            const: true
+            description: "Must run as non-root"
+          runAsUser:
+            type: integer
+            const: 1000
+            description: "User ID"
+          runAsGroup:
+            type: integer
+            const: 1000
+            description: "Group ID"
+          allowPrivilegeEscalation:
+            type: boolean
+            const: false
+          readOnlyRootFilesystem:
+            type: boolean
+            const: true
+
+  backend:
+    type: object
+    required:
+      - enabled
+      - image
+      - service
+      - resources
+      - env
+    properties:
+      enabled:
+        type: boolean
+        description: "Enable/disable backend deployment"
+        default: true
+
+      replicaCount:
+        type: integer
+        minimum: 1
+        maximum: 10
+        description: "Number of backend pod replicas"
+        default: 1
+
+      image:
+        type: object
+        required:
+          - repository
+          - tag
+          - pullPolicy
+        properties:
+          repository:
+            type: string
+            description: "Docker image repository"
+            example: "todo-backend"
+          tag:
+            type: string
+            pattern: '^(?!latest$)[a-zA-Z0-9._-]+$'
+            description: "Image tag (never 'latest')"
+            example: "1.0.0"
+          pullPolicy:
+            type: string
+            enum: ["Never", "IfNotPresent", "Always"]
+            description: "Image pull policy"
+            default: "Never"
+
+      service:
+        type: object
+        required:
+          - port
+        properties:
+          port:
+            type: integer
+            minimum: 1
+            maximum: 65535
+            description: "Container port"
+            default: 8000
+          type:
+            type: string
+            enum: ["ClusterIP"]
+            description: "Service type (always ClusterIP for backend)"
+            default: "ClusterIP"
+
+      dapr:
+        type: object
+        required:
+          - enabled
+          - appId
+        properties:
+          enabled:
+            type: boolean
+            description: "Enable Dapr sidecar"
+            default: true
+          appId:
+            type: string
+            pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+            description: "Dapr application ID"
+            example: "todo-backend"
+          appPort:
+            type: integer
+            default: 8000
+            description: "Application port for Dapr"
+          appProtocol:
+            type: string
+            enum: ["http", "grpc"]
+            default: "http"
+
+      resources:
+        type: object
+        required:
+          - requests
+          - limits
+        properties:
+          requests:
+            type: object
+            required:
+              - cpu
+              - memory
+            properties:
+              cpu:
+                type: string
+                pattern: '^[0-9]+m$'
+                description: "CPU request"
+                example: "200m"
+              memory:
+                type: string
+                pattern: '^[0-9]+Mi$'
+                description: "Memory request"
+                example: "256Mi"
+          limits:
+            type: object
+            required:
+              - cpu
+              - memory
+            properties:
+              cpu:
+                type: string
+                pattern: '^[0-9]+m$'
+                description: "CPU limit"
+                example: "1000m"
+              memory:
+                type: string
+                pattern: '^[0-9]+Mi$'
+                description: "Memory limit"
+                example: "512Mi"
+
+      env:
+        type: array
+        minItems: 1
+        description: "Environment variables"
+        items:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              pattern: '^[A-Z_][A-Z0-9_]*$'
+              description: "Environment variable name"
+            value:
+              type: string
+              description: "Literal value (for non-secrets)"
+            valueFrom:
+              type: object
+              description: "Reference to secret or configmap"
+              properties:
+                secretKeyRef:
+                  type: object
+                  required:
+                    - name
+                    - key
+                  properties:
+                    name:
+                      type: string
+                      description: "Secret name"
+                    key:
+                      type: string
+                      description: "Secret key"
+
+      securityContext:
+        type: object
+        required:
+          - runAsNonRoot
+          - runAsUser
+          - runAsGroup
+        properties:
+          runAsNonRoot:
+            type: boolean
+            const: true
+          runAsUser:
+            type: integer
+            const: 1000
+          runAsGroup:
+            type: integer
+            const: 1000
+          allowPrivilegeEscalation:
+            type: boolean
+            const: false
+          readOnlyRootFilesystem:
+            type: boolean
+            const: true
+
+  dapr:
+    type: object
+    required:
+      - enabled
+      - mtls
+    properties:
+      enabled:
+        type: boolean
+        description: "Enable Dapr globally"
+        default: true
+
+      mtls:
+        type: boolean
+        description: "Enable mTLS for service-to-service"
+        const: true
+        default: true
+
+      stateStore:
+        type: object
+        required:
+          - type
+          - connectionString
+        properties:
+          type:
+            type: string
+            enum: ["state.redis", "state.postgresql"]
+            description: "State store type"
+            default: "state.redis"
+          connectionString:
+            type: object
+            required:
+              - secretKeyRef
+            properties:
+              secretKeyRef:
+                type: object
+                required:
+                  - name
+                  - key
+                properties:
+                  name:
+                    type: string
+                    description: "Secret name containing connection string"
+                  key:
+                    type: string
+                    description: "Secret key for connection string"
+
+      sidecar:
+        type: object
+        description: "Dapr sidecar resource limits"
+        required:
+          - resources
+        properties:
+          resources:
+            type: object
+            required:
+              - requests
+              - limits
+            properties:
+              requests:
+                type: object
+                properties:
+                  cpu:
+                    type: string
+                    default: "100m"
+                  memory:
+                    type: string
+                    default: "128Mi"
+              limits:
+                type: object
+                properties:
+                  cpu:
+                    type: string
+                    default: "300m"
+                  memory:
+                    type: string
+                    default: "256Mi"
+
+  secrets:
+    type: object
+    description: "Secret values (NEVER commit these)"
+    required:
+      - databaseUrl
+      - openaiApiKey
+      - betterAuthSecret
+    properties:
+      databaseUrl:
+        type: string
+        format: uri
+        pattern: '^postgresql://.*'
+        description: "PostgreSQL connection string"
+      openaiApiKey:
+        type: string
+        pattern: '^sk-.*'
+        description: "OpenAI API key"
+      betterAuthSecret:
+        type: string
+        minLength: 32
+        description: "Better Auth secret key"

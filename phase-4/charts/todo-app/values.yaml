@@ -1,0 +1,225 @@
+# Default values for todo-app (Production configuration)
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  namespace: todo
+
+# Frontend configuration
+frontend:
+  name: frontend
+  replicaCount: 3
+  image:
+    repository: todo-frontend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  ingress:
+    enabled: true
+    className: nginx
+    host: todo.example.com
+    tls:
+      enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  env:
+    - name: BETTER_AUTH_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: todo-app-secrets
+          key: BETTER_AUTH_SECRET
+    - name: BETTER_AUTH_URL
+      valueFrom:
+        secretKeyRef:
+          name: todo-app-secrets
+          key: BETTER_AUTH_URL
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: todo-app-secrets
+          key: DATABASE_URL_FRONTEND
+    - name: NEXT_PUBLIC_BACKEND_URL
+      value: "http://todo-app-backend:8000"
+    - name: NEXT_PUBLIC_FRONTEND_URL
+      value: "http://todo.local"
+    - name: NEXT_PUBLIC_API_URL
+      value: "/api/proxy"
+    - name: NEXT_PUBLIC_APP_URL
+      value: "http://todo.local"
+    - name: NODE_ENV
+      value: "development"
+
+# Backend configuration
+backend:
+  name: backend
+  replicaCount: 3
+  image:
+    repository: todo-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 15
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  env:
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: todo-app-secrets
+          key: DATABASE_URL
+    - name: OPENAI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: todo-app-secrets
+          key: OPENAI_API_KEY
+    - name: BETTER_AUTH_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: todo-app-secrets
+          key: BETTER_AUTH_SECRET
+
+# MCP Server configuration
+mcpServer:
+  enabled: false # MCP server is integrated into backend
+  name: mcp-server
+  replicaCount: 2
+  image:
+    repository: todo-mcp-server
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+# Dapr configuration
+dapr:
+  enabled: true
+  config:
+    name: dapr-config
+    mtls:
+      enabled: true
+      workloadCertTTL: 24h
+      allowedClockSkew: 15m
+  stateStore:
+    name: statestore
+    type: state.redis
+    version: v1
+    scopes:
+      - todo-backend
+  sidecar:
+    appId: todo-backend
+    appPort: 8000
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+# Network Policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# RBAC
+rbac:
+  create: true
+
+# Service Accounts
+serviceAccount:
+  create: true
+  frontend:
+    name: frontend-sa
+  backend:
+    name: backend-sa
+  mcpServer:
+    name: mcp-server-sa

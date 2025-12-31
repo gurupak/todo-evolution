@@ -1,0 +1,37 @@
+{{- if .Values.dapr.enabled -}}
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: {{ .Values.dapr.config.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin.dapr-system.svc.cluster.local:9411/api/v2/spans"
+  {{- if .Values.dapr.config.mtls.enabled }}
+  mtls:
+    enabled: {{ .Values.dapr.config.mtls.enabled }}
+    workloadCertTTL: {{ .Values.dapr.config.mtls.workloadCertTTL | quote }}
+    allowedClockSkew: {{ .Values.dapr.config.mtls.allowedClockSkew | quote }}
+    controlPlaneTrustDomain: "cluster.local"
+    sentryAddress: "dapr-sentry.dapr-system.svc.cluster.local:80"
+  {{- end }}
+  features:
+    - name: ServiceInvocation
+      enabled: true
+    - name: State
+      enabled: true
+    - name: PubSub
+      enabled: false
+  accessControl:
+    defaultAction: deny
+    trustDomain: "public"
+    policies:
+      - appId: {{ .Values.dapr.sidecar.appId }}
+        defaultAction: allow
+        trustDomain: "public"
+        namespace: {{ .Values.global.namespace }}
+{{- end }}
